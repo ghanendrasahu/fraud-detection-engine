@@ -1,0 +1,28 @@
+# Secrets / local state - never into image layers
+.env
+*.db
+*.sqlite3
+data/
+
+# Environments & caches
+venv/
+.venv/
+.venv-test/
+.git/
+.github/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+__pycache__/
+*.py[cod]
+.vscode/
+.idea/
+
+# Model artifacts & reports stay out of build context
+models/*.onnx
+models/*.pkl
+reports/
+outputs/
+
+# Frontend build inputs (dashboard served separately or built in its own stage)
+dashboard/node_modules/
