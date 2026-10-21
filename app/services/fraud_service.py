@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from app.feature_store import FeatureStore
 from app.graph_engine import GraphEngine
 from app.investigator import generate_investigator_summary
@@ -11,10 +9,7 @@ from app.logging_config import get_logger
 from app.ml_engine import MLEngine
 from app.rules import evaluate_decision
 from app.schemas import (
-    Decision,
-    FraudDecision,
     GraphResponse,
-    ReasonCode,
     TransactionEvent,
     TransactionFeatures,
     TransactionResponse,

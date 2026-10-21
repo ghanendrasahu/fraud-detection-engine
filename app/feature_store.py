@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import json
 import math
-import time
-from datetime import datetime, timedelta
-from typing import Any, Optional
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from app.config import settings
 from app.logging_config import get_logger
@@ -81,7 +80,7 @@ class InMemoryStore:
     def setex(self, key: str, ttl: int, value: str) -> None:
         self._strings[key] = value
 
-    def get(self, key: str) -> Optional[str]:
+    def get(self, key: str) -> str | None:
         return self._strings.get(key)
 
     def set(self, key: str, value: str) -> None:
@@ -248,8 +247,7 @@ class FeatureStore:
             prev_loc = json.loads(prev_loc_raw)
             prev_lat = prev_loc["lat"]
             prev_lon = prev_loc["lon"]
-            from datetime import timezone as _tz
-            prev_ts_dt = datetime.fromtimestamp(prev_loc["timestamp"], tz=_tz.utc)
+            prev_ts_dt = datetime.fromtimestamp(prev_loc["timestamp"], tz=UTC)
             prev_ts = prev_ts_dt
             elapsed_hours = (now - prev_ts_dt).total_seconds() / 3600.0
 

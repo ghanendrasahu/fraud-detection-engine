@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 import argparse
-import json
 import random
-import sys
 import time
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import requests
 
@@ -96,7 +94,7 @@ def generate_transaction(scenario: str, user_id: str = "user_1001") -> dict:
         "transaction_id": f"txn_{uuid.uuid4().hex[:12]}",
         "user_id": user_id,
         "amount": amount,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "merchant_id": f"merchant_{random.randint(100, 999)}",
         "device_id": cfg["device"],
         "ip_address": cfg["ip"],

@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-import pytest  # type: ignore[import-untyped]
 from fastapi.testclient import TestClient
 
-from app.main import app, fraud_service
 import app.main as main_module
+from app.main import app
 from app.services.fraud_service import FraudService
 
 # Ensure fraud_service is initialized for tests

@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-import math
-from datetime import datetime, timedelta, timezone
-
-import pytest  # type: ignore[import-untyped]
+from datetime import UTC, datetime, timedelta
 
 from app.feature_store import FeatureStore, haversine
 
@@ -43,7 +40,7 @@ class TestFeatureStore:
             "transaction_id": "txn_test_001",
             "user_id": "user_test",
             "amount": 5000.0,
-            "timestamp": datetime(2026, 9, 18, 12, 0, 0, tzinfo=timezone.utc),
+            "timestamp": datetime(2026, 9, 18, 12, 0, 0, tzinfo=UTC),
             "merchant_id": "merchant_001",
             "device_id": "device_001",
             "ip_address": "10.0.0.1",
@@ -66,7 +63,7 @@ class TestFeatureStore:
         assert features["account_velocity_1h"] == 0
 
     def test_velocity_after_transactions(self) -> None:
-        now = datetime(2026, 9, 18, 12, 0, 0, tzinfo=timezone.utc)
+        now = datetime(2026, 9, 18, 12, 0, 0, tzinfo=UTC)
         txn1 = self._make_txn(transaction_id="txn_1", timestamp=now - timedelta(minutes=30))
         txn2 = self._make_txn(transaction_id="txn_2", timestamp=now - timedelta(minutes=10))
         txn3 = self._make_txn(transaction_id="txn_3", timestamp=now)
@@ -82,7 +79,7 @@ class TestFeatureStore:
         assert features["is_new_device"] is True
 
     def test_known_device(self) -> None:
-        now = datetime(2026, 9, 18, 12, 0, 0, tzinfo=timezone.utc)
+        now = datetime(2026, 9, 18, 12, 0, 0, tzinfo=UTC)
         txn1 = self._make_txn(device_id="device_known", timestamp=now - timedelta(hours=2))
         self.store.add_transaction("user_test", txn1)
 
@@ -97,7 +94,7 @@ class TestFeatureStore:
 
     def test_impossible_travel(self) -> None:
         # First transaction in Mumbai
-        now = datetime(2026, 9, 18, 12, 0, 0, tzinfo=timezone.utc)
+        now = datetime(2026, 9, 18, 12, 0, 0, tzinfo=UTC)
         txn1 = self._make_txn(
             transaction_id="txn_1",
             location_lat=19.0760,
@@ -117,7 +114,7 @@ class TestFeatureStore:
         assert features["speed_kmh"] > 800
 
     def test_amount_sum_24h(self) -> None:
-        now = datetime(2026, 9, 18, 12, 0, 0, tzinfo=timezone.utc)
+        now = datetime(2026, 9, 18, 12, 0, 0, tzinfo=UTC)
         txn1 = self._make_txn(transaction_id="txn_1", amount=10000, timestamp=now - timedelta(hours=5))
         txn2 = self._make_txn(transaction_id="txn_2", amount=25000, timestamp=now - timedelta(hours=2))
         self.store.add_transaction("user_test", txn1)

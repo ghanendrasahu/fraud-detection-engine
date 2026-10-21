@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest  # type: ignore[import-untyped]
-
 from app.graph_engine import GraphEngine
 
 

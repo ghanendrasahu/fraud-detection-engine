@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from app.config import settings
 from app.logging_config import get_logger
 from app.schemas import Decision, ReasonCode, TransactionEvent, TransactionFeatures

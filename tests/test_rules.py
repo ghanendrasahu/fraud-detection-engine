@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest  # type: ignore[import-untyped]
-
 from app.rules import evaluate_decision
 from app.schemas import Decision
 

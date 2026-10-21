@@ -56,3 +56,8 @@ logs/
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Test venv
+.venv-test/
+.venv/
+.venv-locktest/

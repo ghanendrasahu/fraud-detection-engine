@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Lint
+        run: ruff check .
+
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies (exact pins)
+        run: pip install -r requirements.txt
+
+      - name: Run tests (offline - feature store falls back to in-memory)
+        env:
+          REDIS_URL: ""
+          KAFKA_ENABLED: "false"
+        run: python -m pytest -q
+
+  docker-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build hardened image (two-stage, non-root, no gcc)
+        run: docker build -t fraud-engine:ci .
+
+      - name: Assert image has no compiler toolchain
+        run: |
+          if docker run --rm --entrypoint sh fraud-engine:ci -c "command -v gcc"; then
+            echo "ERROR: gcc present in runtime image"; exit 1
+          fi
+          echo "runtime image is clean (no gcc)"
+
+      - name: Verify non-root + /health
+        run: |
+          docker run -d --name probe -p 8000:8000 fraud-engine:ci
+          for i in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/health || true)
+            if [ "$code" = "200" ]; then
+              user=$(docker exec probe whoami)
+              echo "health OK, container user: $user"
+              docker rm -f probe
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "health never went green"
+          docker logs probe
+          docker rm -f probe
+          exit 1
