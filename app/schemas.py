@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -53,9 +53,9 @@ class TransactionFeatures(BaseModel):
     amount_sum_24h: float = Field(default=0.0, ge=0)
     is_new_device: bool = Field(default=True)
     speed_kmh: float = Field(default=0.0, ge=0)
-    previous_location_lat: Optional[float] = Field(default=None, ge=-90, le=90)
-    previous_location_long: Optional[float] = Field(default=None, ge=-180, le=180)
-    previous_timestamp: Optional[datetime] = None
+    previous_location_lat: float | None = Field(default=None, ge=-90, le=90)
+    previous_location_long: float | None = Field(default=None, ge=-180, le=180)
+    previous_timestamp: datetime | None = None
 
 
 class ReasonCode(BaseModel):
@@ -140,3 +140,47 @@ class ModelInfoResponse(BaseModel):
     features: list[str]
     threshold: float
     onnx_available: bool
+
+
+class AuthAction(str, Enum):
+    """Authentication / identity event kinds."""
+
+    LOGIN = "login"
+    MFA_CHANGE = "mfa_change"
+    PRIVILEGE_ESCALATION = "privilege_escalation"
+    PASSWORD_RESET = "password_reset"
+
+
+class AuthDecision(str, Enum):
+    """Identity risk decision outcomes."""
+
+    ALLOW = "ALLOW"
+    STEP_UP = "STEP_UP"  # require MFA / re-authentication
+    BLOCK = "BLOCK"
+
+
+class AuthEvent(BaseModel):
+    """A login / identity event for anomaly scoring."""
+
+    user_id: str = Field(..., min_length=1, max_length=256)
+    device_id: str = Field(..., min_length=1, max_length=256)
+    ip_address: str
+    action: AuthAction = AuthAction.LOGIN
+    success: bool = True
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    is_new_device: bool = False
+    country: str | None = None
+    city: str | None = None
+    latitude: float | None = Field(default=None, ge=-90, le=90)
+    longitude: float | None = Field(default=None, ge=-180, le=180)
+    user_agent: str | None = None
+
+
+class AuthAssessment(BaseModel):
+    """Scored identity event with reason codes and an incident summary."""
+
+    risk_score: float = Field(..., ge=0, le=100)
+    decision: AuthDecision
+    reason_codes: list[ReasonCode] = Field(default_factory=list)
+    investigation: str = ""
+    profile: dict[str, Any] = Field(default_factory=dict)

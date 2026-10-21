@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from pathlib import Path
-from pydantic_settings import BaseSettings  # type: ignore[import-untyped]
+
 from pydantic import Field
+from pydantic_settings import BaseSettings  # type: ignore[import-untyped]
 
 
 class Settings(BaseSettings):
@@ -18,6 +19,11 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = Field(default="INFO", description="Python logging level")
     APP_ENV: str = Field(default="development", description="Application environment")
     LLM_API_KEY: str = Field(default="", description="Optional LLM API key for AI investigator")
+    API_KEY: str = Field(default="", description="Require X-API-Key header on mutating endpoints when set; empty disables")
+    BACKEND_ORIGINS: str = Field(
+        default="http://localhost:5173,http://localhost:3000,http://localhost:8501",
+        description="Comma-separated explicit CORS allowlist",
+    )
     LLM_MODEL: str = Field(default="gpt-4o-mini", description="LLM model name")
     MODEL_FEATURES: list[str] = Field(
         default=[
@@ -44,6 +50,11 @@ class Settings(BaseSettings):
     ML_RISK_THRESHOLD: float = Field(default=0.85, description="ML risk score threshold for investigation")
     GRAPH_PENALTY_THRESHOLD: float = Field(default=70.0, description="Graph penalty threshold for investigation")
     IMPOSSIBLE_TRAVEL_SPEED: float = Field(default=800.0, description="Speed in km/h for impossible travel")
+
+    # Auth / identity risk thresholds (Predictive Cybersecurity Intelligence)
+    AUTH_MAX_SPEED: float = Field(default=900.0, description="Speed in km/h beyond which travel is impossible")
+    AUTH_STEP_UP_THRESHOLD: float = Field(default=40.0, description="Risk score requiring step-up auth (MFA)")
+    AUTH_BLOCK_THRESHOLD: float = Field(default=80.0, description="Risk score blocking the session")
 
     # Redis TTLs (seconds)
     TRANSACTION_HISTORY_TTL: int = Field(default=86400, description="TTL for transaction records (24h)")
