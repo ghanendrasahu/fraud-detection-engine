@@ -14,7 +14,10 @@ ENV PIP_NO_CACHE_DIR=1
 WORKDIR /app
 COPY --from=wheels /wheels /wheels
 COPY requirements.txt .
-RUN pip install --no-cache-dir --no-index --find-links=/wheels -r requirements.txt
+# onnxmltools is only needed to export the trained XGBoost model to ONNX, so
+# it is installed for the build and never reaches the runtime image.
+RUN pip install --no-cache-dir --no-index --find-links=/wheels -r requirements.txt \
+    && pip install --no-cache-dir onnxmltools
 COPY scripts ./scripts
 RUN python scripts/train_model.py \
     && test -s models/fraud_model.onnx \
