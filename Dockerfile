@@ -6,7 +6,21 @@ WORKDIR /build
 COPY requirements.txt .
 RUN pip wheel --wheel-dir /wheels -r requirements.txt
 
-# Stage 2 - slim runtime, non-root, stdlib healthcheck.
+# Stage 2 - train the model at build time so the image is self-contained
+# (Hugging Face Spaces cannot mount volumes; docker/ users still override
+# models/ with their own volume, which shadows the baked default).
+FROM python:3.11-slim AS train
+ENV PIP_NO_CACHE_DIR=1
+WORKDIR /app
+COPY --from=wheels /wheels /wheels
+COPY requirements.txt .
+RUN pip install --no-cache-dir --no-index --find-links=/wheels -r requirements.txt
+COPY scripts ./scripts
+RUN python scripts/train_model.py \
+    && test -s models/fraud_model.onnx \
+    && test -s models/fraud_model.pkl
+
+# Stage 3 - slim runtime, non-root, stdlib healthcheck.
 FROM python:3.11-slim
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -18,8 +32,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --no-index --find-links=/wheels -r requirements.txt \
     && rm -rf /wheels
 
-# App code only - data/ and models/ are mounted volumes, never baked layers.
 COPY app ./app
+COPY --from=train /app/models ./models
 
 RUN useradd --create-home --uid 10001 appuser \
     && mkdir -p models data \
